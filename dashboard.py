@@ -100,12 +100,9 @@ st.markdown("""
     #MainMenu, header, footer,
     [data-testid="stToolbar"], [data-testid="stDecoration"] { display: none !important; }
     [data-testid="stHeader"] { background: transparent !important; }
-
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); }
     ::-webkit-scrollbar-thumb { background: rgba(110,231,247,0.3); border-radius: 3px; }
-
-    /* ── Sidebar ── */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0b0c18 0%, var(--bg-primary) 100%) !important;
         border-right: 1px solid var(--border-card) !important;
@@ -132,13 +129,7 @@ st.markdown("""
         transform: translateX(5px) !important;
         box-shadow: inset 0 0 20px rgba(110,231,247,0.04) !important;
     }
-
-    /* Always show sidebar toggle */
-    [data-testid="collapsedControl"] { display: block !important; }
-
     .main .block-container { padding: 2rem 3rem !important; max-width: 1600px !important; }
-
-    /* ── Metric Cards ── */
     .metric-card {
         background: var(--grad-card);
         border: 1px solid var(--border-card);
