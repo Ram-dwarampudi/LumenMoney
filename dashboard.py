@@ -6,12 +6,7 @@ import hashlib
 from datetime import datetime, timedelta
 import random
 
-st.set_page_config(
-    page_title="LumenMoney - Smart Finance Dashboard",
-    page_icon="💰",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+
 # Always show a way to open sidebar
 with st.sidebar:
     pass  # keeps sidebar always initialized
