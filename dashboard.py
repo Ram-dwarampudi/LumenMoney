@@ -6,34 +6,13 @@ import hashlib
 from datetime import datetime, timedelta
 import random
 
+st.set_page_config(
+    page_title="LumenMoney - Smart Finance Dashboard",
+    page_icon="💰",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Always show a way to open sidebar
-with st.sidebar:
-    pass  # keeps sidebar always initialized
-
-# Add a visible menu button when sidebar is collapsed  
-st.markdown("""
-<style>
-section[data-testid="stSidebar"][aria-expanded="false"] {
-    margin-left: -21rem;
-}
-[data-testid="collapsedControl"] {
-    display: block !important;
-    visibility: visible !important;
-    position: fixed !important;
-    top: 50% !important;
-    left: 0px !important;
-    z-index: 999999 !important;
-    background: #13141f !important;
-    border: 1px solid rgba(110,231,247,0.4) !important;
-    border-left: none !important;
-    border-radius: 0 12px 12px 0 !important;
-    padding: 12px 6px !important;
-    color: #6ee7f7 !important;
-    box-shadow: 4px 0 20px rgba(110,231,247,0.15) !important;
-}
-</style>
-""", unsafe_allow_html=True)
 # Initialize session state
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 'dashboard'
@@ -121,9 +100,12 @@ st.markdown("""
     #MainMenu, header, footer,
     [data-testid="stToolbar"], [data-testid="stDecoration"] { display: none !important; }
     [data-testid="stHeader"] { background: transparent !important; }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); }
     ::-webkit-scrollbar-thumb { background: rgba(110,231,247,0.3); border-radius: 3px; }
+
+    /* ── Sidebar ── */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0b0c18 0%, var(--bg-primary) 100%) !important;
         border-right: 1px solid var(--border-card) !important;
@@ -150,7 +132,13 @@ st.markdown("""
         transform: translateX(5px) !important;
         box-shadow: inset 0 0 20px rgba(110,231,247,0.04) !important;
     }
+
+    /* Always show sidebar toggle */
+    [data-testid="collapsedControl"] { display: block !important; }
+
     .main .block-container { padding: 2rem 3rem !important; max-width: 1600px !important; }
+
+    /* ── Metric Cards ── */
     .metric-card {
         background: var(--grad-card);
         border: 1px solid var(--border-card);
@@ -384,20 +372,7 @@ st.markdown("""
     .stExpander { background: var(--bg-card) !important; border: 1px solid var(--border-card) !important; border-radius: var(--radius-lg) !important; }
 </style>
 """, unsafe_allow_html=True)
-st.markdown("""
-<style>
-    /* Always show the sidebar toggle button */
-    [data-testid="collapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        background: #13141f !important;
-        border: 1px solid rgba(110,231,247,0.2) !important;
-        border-radius: 0 10px 10px 0 !important;
-        color: #6ee7f7 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+
 # ============= AUTH FUNCTIONS =============
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
