@@ -363,7 +363,20 @@ st.markdown("""
     .stExpander { background: var(--bg-card) !important; border: 1px solid var(--border-card) !important; border-radius: var(--radius-lg) !important; }
 </style>
 """, unsafe_allow_html=True)
-
+st.markdown("""
+<style>
+    /* Always show the sidebar toggle button */
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: #13141f !important;
+        border: 1px solid rgba(110,231,247,0.2) !important;
+        border-radius: 0 10px 10px 0 !important;
+        color: #6ee7f7 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 # ============= AUTH FUNCTIONS =============
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
