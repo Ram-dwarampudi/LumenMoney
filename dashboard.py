@@ -24,6 +24,29 @@ if 'users_db' not in st.session_state:
     st.session_state.users_db = {}
 if 'user_name' not in st.session_state:
     st.session_state.user_name = ""
+# preferences/defaults (including theme)
+def_defaults = {
+    'theme': 'Dark',
+    'accent_color': '#6ee7f7',
+    'chart_style': 'Line Charts',
+    'compact_mode': False,
+    'primary_currency': 'INR (₹)',
+    'date_format': 'DD/MM/YYYY',
+    'time_zone': 'IST (UTC+5:30)',
+    'language': 'English',
+    'email_alerts': False,
+    'budget_warnings': False,
+    'goal_milestones': False,
+    'large_transactions': False,
+}
+for k, v in def_defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+# widget feature flags
+for flag in ('show_manage_widgets','show_add_widget'):
+    if flag not in st.session_state:
+        st.session_state[flag] = False
+
 if 'transactions' not in st.session_state:
     st.session_state.transactions = [
         {"date": "2024-07-15", "description": "Salary Credit", "category": "Income", "amount": 85000, "type": "Income"},
@@ -129,6 +152,45 @@ st.markdown("""
         transform: translateX(5px) !important;
         box-shadow: inset 0 0 20px rgba(110,231,247,0.04) !important;
     }
+
+    /* Sidebar collapse toggle button styling */
+    button[data-testid="stSidebarCollapseButton"] {
+        color: var(--text-bright) !important;
+        background: var(--accent-1) !important;
+        border: 2px solid var(--accent-1) !important;
+        border-radius: var(--radius-md) !important;
+        padding: 12px 16px !important;
+        cursor: pointer !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.3s ease !important;
+        position: relative !important;
+        z-index: 999 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    button[data-testid="stSidebarCollapseButton"] svg {
+        stroke: var(--text-bright) !important;
+        fill: var(--text-bright) !important;
+        width: 24px !important;
+        height: 24px !important;
+    }
+    button[data-testid="stSidebarCollapseButton"]:hover {
+        background: var(--accent-2) !important;
+        border-color: var(--accent-2) !important;
+        box-shadow: 0 6px 20px rgba(124, 110, 246, 0.5) !important;
+        transform: translateY(-2px) !important;
+    }
+    button[data-testid="stSidebarCollapseButton"]:active {
+        background: var(--accent-3) !important;
+        transform: translateY(0) !important;
+    }
+
     .main .block-container { padding: 2rem 3rem !important; max-width: 1600px !important; }
     .metric-card {
         background: var(--grad-card);
@@ -364,42 +426,85 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# light-theme overrides (apply after base styles)
+if st.session_state.get('theme') == 'Light':
+    st.markdown("""
+    <style>
+        :root {
+            --bg-primary:    #f8f9fa;
+            --bg-secondary:  #ffffff;
+            --bg-card:       #ffffff;
+            --bg-card-hover: #f4f4f4;
+            --bg-surface:    #f0f0f0;
+            --text-bright:   #20232a;
+            --text-primary:  #1a1a1a;
+            --text-secondary:#555555;
+            --border-card:  rgba(0,0,0,0.08);
+        }
+        html, body, .stApp, [data-testid="stAppViewContainer"] {
+            background: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# always respect selected accent color
+if st.session_state.get('accent_color'):
+    st.markdown(f"""
+    <style>
+        :root {{ --accent-1: {st.session_state.get('accent_color')} !important; }}
+    </style>
+    """, unsafe_allow_html=True)
+
 # ============= AUTH FUNCTIONS =============
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def login_user(email, password):
+    # debugging/logging
+    print(f"login_user called with email={email!r}, password_len={len(password) if password else 0}")
     try:
         email = email.lower().strip()
         if email not in st.session_state.users_db:
+            print("login_user: email not found")
             return False, "Email not found. Please sign up first."
         if st.session_state.users_db[email]['password'] == hash_password(password):
+            print("login_user: authentication successful")
             st.session_state.user = {"email": email, "localId": hash_password(email)[:16], "name": st.session_state.users_db[email].get('name', '')}
             st.session_state.user_email = email
             st.session_state.user_id = hash_password(email)[:16]
             st.session_state.user_name = st.session_state.users_db[email].get('name', '')
             return True, "Login successful!"
+        print("login_user: invalid password")
         return False, "Invalid email or password"
     except Exception as e:
+        print(f"login_user exception: {e}")
         return False, f"Login error: {str(e)}"
 
 def signup_user(email, password, name=""):
+    # debugging/logging
+    print(f"signup_user called with email={email!r}, password_len={len(password) if password else 0}, name={name!r}")
     try:
         email = email.lower().strip()
         name = name.strip()
         if '@' not in email or '.' not in email:
+            print("signup_user: invalid email format")
             return False, "Invalid email format"
         if len(password) < 6:
+            print("signup_user: password too short")
             return False, "Password should be at least 6 characters"
         if email in st.session_state.users_db:
+            print("signup_user: email already exists")
             return False, "Email already exists. Please login instead."
         st.session_state.users_db[email] = {'password': hash_password(password), 'name': name}
         st.session_state.user = {"email": email, "localId": hash_password(email)[:16], "name": name}
         st.session_state.user_email = email
         st.session_state.user_id = hash_password(email)[:16]
         st.session_state.user_name = name
+        print("signup_user: account created")
         return True, "Account created successfully!"
     except Exception as e:
+        print(f"signup_user exception: {e}")
         return False, f"Signup error: {str(e)}"
 
 def logout_user():
@@ -412,52 +517,45 @@ def logout_user():
 if st.session_state.user is None:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown(f"""
-        <div class="auth-mode-indicator">
-            <div class="mode-badge {'active' if st.session_state.auth_mode == 'login' else 'inactive'}">🔐 Login</div>
-            <div class="mode-badge {'active' if st.session_state.auth_mode == 'signup' else 'inactive'}">✨ Sign Up</div>
-        </div>
+        st.markdown("""
         <div class="auth-container">
-            <div class="auth-title">{"Welcome Back" if st.session_state.auth_mode == 'login' else "Get Started"}</div>
-            <div class="auth-subtitle">{"Sign in to access your financial dashboard" if st.session_state.auth_mode == 'login' else "Create your account to start managing your finances"}</div>
+            <div class="auth-title">Welcome</div>
+            <div class="auth-subtitle">Please log in or sign up to continue</div>
         </div>
         """, unsafe_allow_html=True)
-        email = st.text_input("Email", placeholder="Enter your email", key="auth_email", label_visibility="collapsed")
-        if st.session_state.auth_mode == 'signup':
-            name = st.text_input("Full Name", placeholder="Enter your full name", key="auth_name", label_visibility="collapsed")
-        else:
-            name = ""
-        password = st.text_input("Password", type="password", placeholder="Enter your password", key="auth_password", label_visibility="collapsed")
-        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-        if st.session_state.auth_mode == 'login':
-            if st.button("🔐 Sign In", use_container_width=True, type="primary"):
+        # use tabs for separate login/signup flows
+        tab_login, tab_signup = st.tabs(["🔐 Login", "✨ Sign Up"])
+        with tab_login:
+            with st.form("login_form"):
+                email = st.text_input("Email", placeholder="Enter your email", key="login_email", label_visibility="collapsed")
+                password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_password", label_visibility="collapsed")
+                login_submitted = st.form_submit_button("Sign In")
+            if login_submitted:
                 if email and password:
                     success, message = login_user(email, password)
                     if success:
-                        st.success(message); st.rerun()
+                        st.success(message)
+                        st.rerun()
                     else:
                         st.error(message)
                 else:
                     st.warning("Please enter both email and password")
-        else:
-            if st.button("✨ Create Account", use_container_width=True, type="primary"):
+        with tab_signup:
+            with st.form("signup_form"):
+                email = st.text_input("Email", placeholder="Enter your email", key="signup_email", label_visibility="collapsed")
+                name = st.text_input("Full Name", placeholder="Enter your full name", key="signup_name", label_visibility="collapsed")
+                password = st.text_input("Password", type="password", placeholder="Enter your password", key="signup_password", label_visibility="collapsed")
+                signup_submitted = st.form_submit_button("Create Account")
+            if signup_submitted:
                 if email and password:
                     success, message = signup_user(email, password, name)
                     if success:
-                        st.success(message); st.rerun()
+                        st.success(message)
+                        st.rerun()
                     else:
                         st.error(message)
                 else:
                     st.warning("Please fill in all required fields")
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        if st.session_state.auth_mode == 'login':
-            st.markdown("<div style='text-align: center; color: var(--text-muted);'>Don't have an account?</div>", unsafe_allow_html=True)
-            if st.button("Create Account", use_container_width=True, key="switch_signup"):
-                st.session_state.auth_mode = 'signup'; st.rerun()
-        else:
-            st.markdown("<div style='text-align: center; color: var(--text-muted);'>Already have an account?</div>", unsafe_allow_html=True)
-            if st.button("Sign In", use_container_width=True, key="switch_login"):
-                st.session_state.auth_mode = 'login'; st.rerun()
     st.stop()
 
 # ============= SIDEBAR =============
@@ -481,6 +579,8 @@ with st.sidebar:
         st.session_state.current_page = 'budget'; st.rerun()
     if st.button("📈 Analytics", key="nav_analytics", use_container_width=True):
         st.session_state.current_page = 'analytics'; st.rerun()
+    if st.button("💼 Investment", key="nav_investment", use_container_width=True):
+        st.session_state.current_page = 'investment'; st.rerun()
     st.markdown('<div class="nav-section-title" style="margin-top: 24px;">Settings</div>', unsafe_allow_html=True)
     if st.button("⚙️ Settings", key="nav_settings", use_container_width=True):
         st.session_state.current_page = 'settings'; st.rerun()
@@ -499,6 +599,7 @@ with top_col1:
         'wallet': ('Wallet', 'Manage your digital wallets'),
         'goals': ('Goals', 'Track your financial goals'),
         'budget': ('Budget', 'Plan and monitor your budget'),
+        'investment': ('Investment', 'Safe, low-risk ideas to grow savings'),
         'analytics': ('Analytics', 'Deep insights into your finances'),
         'settings': ('Settings', 'Customize your preferences'),
         'profile': ('Profile', 'Manage your account')
@@ -515,12 +616,20 @@ with top_col1:
 # PAGE: DASHBOARD
 # ============================================================
 if st.session_state.current_page == 'dashboard':
-    st.markdown("""
-    <div class="action-buttons">
-        <button class="btn-secondary">⚙ Manage Widgets</button>
-        <button class="btn-primary">＋ Add Widget</button>
-    </div>
-    """, unsafe_allow_html=True)
+    # action buttons replaced with native Streamlit widgets
+    btn_col1, btn_col2 = st.columns(2)
+    with btn_col1:
+        if st.button("⚙ Manage Widgets"):
+            st.session_state.show_manage_widgets = True
+    with btn_col2:
+        if st.button("＋ Add Widget"):
+            st.session_state.show_add_widget = True
+
+    # display feedback if flags are set
+    if st.session_state.get('show_manage_widgets'):
+        st.info("Manage widgets is a work in progress. You can reorder or remove existing widgets here later.")
+    if st.session_state.get('show_add_widget'):
+        st.info("Add widget is a work in progress. New widget types will be available soon.")
 
     metric_cols = st.columns(3, gap="large")
     with metric_cols[0]:
@@ -919,6 +1028,47 @@ elif st.session_state.current_page == 'budget':
 # ============================================================
 # PAGE: ANALYTICS
 # ============================================================
+elif st.session_state.current_page == 'investment':
+    st.header("Investment Ideas")
+    # calculate income/expense/savings based on transactions
+    txns = st.session_state.get('transactions', [])
+    total_income = sum(t['amount'] for t in txns if t['amount'] > 0)
+    total_expense = sum(-t['amount'] for t in txns if t['amount'] < 0)
+    net_savings = total_income - total_expense
+    st.markdown(
+        f"**Total income:** ₹{total_income:,.0f}  \
+**Total expenses:** ₹{total_expense:,.0f}  \
+**Net savings:** ₹{net_savings:,.0f}"
+    )
+
+    if total_income == 0:
+        st.warning("No income data available yet. Add transactions to get tailored suggestions.")
+    else:
+        # simple rules
+        savings_ratio = net_savings / total_income if total_income else 0
+        st.markdown("---")
+        if savings_ratio <= 0:
+            st.info("It looks like you're spending as much or more than you earn. Focus on reducing expenses before investing.")
+        elif savings_ratio < 0.1:
+            st.info("Your savings rate is below 10%. Consider cutting miscellaneous expenses and start a high-yield savings account.")
+        elif savings_ratio < 0.3:
+            st.info("You're saving a modest amount. A recurring deposit or conservative bond could steadily grow this buffer.")
+        else:
+            st.success("Great savings rate! You can allocate a portion to safe investment vehicles like fixed deposits or government bonds while keeping an emergency fund.")
+
+    st.markdown("""
+    ### Low‑risk ideas
+    - **High-yield savings accounts** or fixed deposits with reputable banks
+    - **Government-backed bonds** (e.g. treasury bills, municipal bonds)
+    - **Recurring deposit plans** that auto-save a portion of your income
+    - **Employer retirement plans** (401k, EPF) with matching contributions
+
+    These suggestions are designed to redirect money that would otherwise be
+    spent on incidental expenses, providing predictable returns without exposing
+    you to significant risk.
+    """, unsafe_allow_html=True)
+    # you can extend this section with charts or calculators later
+
 elif st.session_state.current_page == 'analytics':
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
     st.markdown('<div class="chart-title" style="margin-bottom:20px;">Income vs Expense — 12 Month Trend</div>', unsafe_allow_html=True)
@@ -968,78 +1118,67 @@ elif st.session_state.current_page == 'analytics':
 # PAGE: SETTINGS
 # ============================================================
 elif st.session_state.current_page == 'settings':
-    set_c1, set_c2 = st.columns(2, gap="large")
-    with set_c1:
-        st.markdown("""
-        <div class="profile-section">
-            <div class="section-title">💱 Currency & Region</div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Primary Currency</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Default currency for all transactions</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">INR (₹)</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Date Format</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">How dates are displayed</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">DD/MM/YYYY</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Time Zone</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Your local time zone</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">IST (UTC+5:30)</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Language</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">App display language</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">English</span>
-            </div>
-        </div>""", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="profile-section">
-            <div class="section-title">🔔 Notifications</div>
-            <div class="preference-item"><div><div class="preference-label">Email Alerts</div><div class="preference-sublabel">Receive weekly summary emails</div></div><div class="toggle-switch"></div></div>
-            <div class="preference-item"><div><div class="preference-label">Budget Warnings</div><div class="preference-sublabel">Alert when 80% of budget is used</div></div><div class="toggle-switch"></div></div>
-            <div class="preference-item"><div><div class="preference-label">Goal Milestones</div><div class="preference-sublabel">Celebrate when goals hit 25%, 50%, 75%</div></div><div class="toggle-switch"></div></div>
-            <div class="preference-item"><div><div class="preference-label">Large Transactions</div><div class="preference-sublabel">Alert for transactions above ₹10,000</div></div><div class="toggle-switch"></div></div>
-        </div>""", unsafe_allow_html=True)
+    st.header("Settings")
+    with st.form("settings_form"):
+        st.subheader("💱 Currency & Region")
+        st.session_state.primary_currency = st.selectbox(
+            "Primary currency",
+            ["INR (₹)", "USD ($)", "EUR (€)"],
+            index=["INR (₹)", "USD ($)", "EUR (€)"].index(st.session_state.primary_currency),
+        )
+        st.session_state.date_format = st.selectbox(
+            "Date format",
+            ["DD/MM/YYYY", "MM/DD/YYYY"],
+            index=["DD/MM/YYYY", "MM/DD/YYYY"].index(st.session_state.date_format),
+        )
+        st.session_state.time_zone = st.selectbox(
+            "Time zone",
+            ["IST (UTC+5:30)", "UTC (UTC+0)"],
+            index=["IST (UTC+5:30)", "UTC (UTC+0)"].index(st.session_state.time_zone),
+        )
+        st.session_state.language = st.selectbox(
+            "Language",
+            ["English", "Hindi", "Spanish"],
+            index=["English", "Hindi", "Spanish"].index(st.session_state.language),
+        )
 
-    with set_c2:
-        st.markdown("""
-        <div class="profile-section">
-            <div class="section-title">🎨 Appearance</div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Theme</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">App color theme</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">Dark Mode</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Accent Color</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Primary highlight color</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">🩵 Cyan</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Chart Style</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Default chart type</div></div>
-                <span style="color:#6ee7f7;font-weight:700;font-size:13px;">Line Charts</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Compact Mode</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Reduce spacing between elements</div></div>
-                <span style="color:#4a5270;font-weight:700;font-size:13px;">Off</span>
-            </div>
-        </div>""", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="profile-section">
-            <div class="section-title">🔐 Privacy & Security</div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Two-Factor Auth</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Extra login security</div></div>
-                <span style="color:#34d399;font-weight:700;font-size:13px;">✓ Enabled</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Biometric Login</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Use fingerprint/face ID</div></div>
-                <span style="color:#4a5270;font-weight:700;font-size:13px;">Disabled</span>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Data Export</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Download your financial data</div></div>
-                <button class="edit-btn">Export CSV</button>
-            </div>
-            <div class="setting-row">
-                <div><div style="color:#f0f4ff;font-weight:600;font-size:14px;">Delete Account</div><div style="color:#4a5270;font-size:12px;margin-top:3px;">Permanently remove your data</div></div>
-                <button style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:7px 14px;color:#fb7185;font-size:12px;font-weight:600;cursor:pointer;">Delete</button>
-            </div>
-        </div>""", unsafe_allow_html=True)
+        st.subheader("🔔 Notifications")
+        st.session_state.email_alerts = st.checkbox("Email alerts", value=st.session_state.email_alerts)
+        st.session_state.budget_warnings = st.checkbox("Budget warnings", value=st.session_state.budget_warnings)
+        st.session_state.goal_milestones = st.checkbox("Goal milestones", value=st.session_state.goal_milestones)
+        st.session_state.large_transactions = st.checkbox("Large transactions", value=st.session_state.large_transactions)
+
+        st.subheader("🎨 Appearance")
+        st.session_state.theme = st.radio("Theme", ["Dark", "Light"], index=0 if st.session_state.theme == "Dark" else 1)
+        st.session_state.accent_color = st.color_picker("Accent color", value=st.session_state.accent_color)
+        st.session_state.chart_style = st.selectbox(
+            "Chart style",
+            ["Line Charts", "Bar Charts", "Pie Charts"],
+            index=["Line Charts", "Bar Charts", "Pie Charts"].index(st.session_state.chart_style),
+        )
+        st.session_state.compact_mode = st.checkbox("Compact mode", value=st.session_state.compact_mode)
+
+        st.subheader("🔐 Privacy & Security")
+        st.session_state.two_factor = st.checkbox("Two-Factor Auth", value=st.session_state.get('two_factor', True))
+        st.session_state.biometric = st.checkbox("Biometric Login", value=st.session_state.get('biometric', False))
+
+        if st.form_submit_button("Save settings"):
+            st.success("Settings saved")
+            st.experimental_rerun()
+
+    # data export / delete account actions
+    if st.button("Export CSV"):
+        st.info("Download functionality not implemented yet.")
+    if st.button("Delete Account"):
+        st.warning("Account deletion not implemented.")
+
+    # dynamic CSS injection based on accent color
+    if st.session_state.accent_color:
+        st.markdown(f"""
+        <style>
+            :root {{ --accent-1: {st.session_state.accent_color} !important; }}
+        </style>
+        """, unsafe_allow_html=True)
 
 # ============================================================
 # PAGE: PROFILE
