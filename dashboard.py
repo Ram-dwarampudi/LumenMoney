@@ -12,7 +12,33 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# Always show a way to open sidebar
+with st.sidebar:
+    pass  # keeps sidebar always initialized
 
+# Add a visible menu button when sidebar is collapsed  
+st.markdown("""
+<style>
+section[data-testid="stSidebar"][aria-expanded="false"] {
+    margin-left: -21rem;
+}
+[data-testid="collapsedControl"] {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 0px !important;
+    z-index: 999999 !important;
+    background: #13141f !important;
+    border: 1px solid rgba(110,231,247,0.4) !important;
+    border-left: none !important;
+    border-radius: 0 12px 12px 0 !important;
+    padding: 12px 6px !important;
+    color: #6ee7f7 !important;
+    box-shadow: 4px 0 20px rgba(110,231,247,0.15) !important;
+}
+</style>
+""", unsafe_allow_html=True)
 # Initialize session state
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 'dashboard'
