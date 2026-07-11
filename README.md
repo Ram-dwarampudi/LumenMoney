@@ -1,36 +1,39 @@
 # 💰 LumenMoney
 
 ## 📌 Overview
-**LumenMoney** is a simple and efficient finance management web application designed to help users track their income and expenses. It provides a clean interface to manage financial records and gain better insights into spending habits.
-
-This project focuses on improving financial awareness by allowing users to organize and monitor their transactions easily.
+**LumenMoney** is a multi-page personal finance dashboard built with **Streamlit**. It gives users a single place to track income and expenses, monitor budgets, set savings goals, and visualize spending patterns through interactive charts — all wrapped in a custom dark-themed, modern UI.
 
 ---
 
 ## 🚀 Features
-- 💸 Add and manage income and expenses  
-- 📊 View overall financial summary  
-- 📁 Organize transactions efficiently  
-- 🧾 Simple and user-friendly interface  
-- ⚡ Fast and lightweight application  
+- 🔐 **User authentication** — session-based signup/login with SHA-256 password hashing
+- 📊 **Dashboard** — at-a-glance summary of income, expenses, and overall balance
+- 🧾 **Transactions** — categorized income/expense records (Food, Transport, Utilities, Rent, Health, Shopping, etc.)
+- 🎯 **Goals** — track savings goals with target amounts, deadlines, and progress visualization
+- 💰 **Budget** — set category-wise budgets and monitor spent vs. remaining amounts, with over-budget alerts
+- 📈 **Investment & Analytics pages** — additional views for portfolio and spending insights
+- ⚙️ **Settings** — customizable theme, accent color, chart style, currency (INR), date format, time zone, and notification preferences
+- 👤 **Profile** — user profile with editable details and preference toggles
+- 📉 **Interactive charts** — built with Plotly (bar charts, trend lines) for budgets, goals, and monthly spending
 
 ---
 
 ## 🛠️ Tech Stack
-- **Frontend:** HTML, CSS, JavaScript  
-- **Backend:** Not implemented (Static project)  
-- **Storage:** Browser-based (can be extended to localStorage or database)  
+- **Framework:** Streamlit (Python)
+- **Visualization:** Plotly (`plotly.graph_objects`, `plotly.express`)
+- **Data Handling:** Pandas, NumPy
+- **Auth:** Session-based login/signup with `hashlib` (SHA-256) password hashing
+- **Styling:** Custom CSS injected via Streamlit for a dark, glassmorphism-style UI
 
 ---
 
 ## 📂 Project Structure
-
+```
 LumenMoney/
-│── index.html
-│── style.css
-│── script.js
-│── assets/
-
+│── dashboard.py           # Main Streamlit app (pages, auth, styling, charts)
+│── dashboard_backup.py    # Backup/previous version of the app
+│── requirements.txt       # Python dependencies
+```
 
 ---
 
@@ -39,64 +42,60 @@ LumenMoney/
 1. Clone the repository:
    ```bash
    git clone https://github.com/Ram-dwarampudi/LumenMoney.git
+   cd LumenMoney
+   ```
 
-Navigate to the project folder:
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-cd LumenMoney
-Open the project:
-Double-click index.html
-OR
-Open with Live Server (VS Code recommended)
-📸 Screenshots
+3. Run the app:
+   ```bash
+   streamlit run dashboard.py
+   ```
 
-Add screenshots of your project UI here to improve visibility
+4. Sign up / log in with a new account, and start exploring the Dashboard, Transactions, Budget, and Goals pages.
 
-📚 Concepts Used
-DOM Manipulation
-Event Handling
-Basic UI Design
-Data Handling in JavaScript
-⚠️ Limitations
-No backend integration
-Data is not stored permanently
-No authentication system
-🔮 Future Improvements
-🔐 Add user authentication (Login/Signup)
-💾 Store data using localStorage or database
-📊 Add charts for expense visualization (Chart.js)
-📱 Make the application fully responsive
-🌐 Deploy the project online
-🎯 Purpose
+---
 
+## 📚 Concepts Used
+- Multi-page app routing using Streamlit session state
+- Session-based authentication and password hashing
+- Data visualization with Plotly (bar charts, comparative charts)
+- Custom CSS theming inside a Streamlit app
+- State management for user preferences (theme, currency, notifications)
+
+---
+
+## ⚠️ Current Limitations
+- Data (transactions, goals, budgets) is currently held in session state / sample data rather than a persistent database
+- No real bank/payment integration — figures are illustrative
+- Single-session auth (no persistent user database yet)
+
+## 🔮 Future Improvements
+- 💾 Persist user data with a database (SQLite/PostgreSQL) instead of session state
+- 🔗 Real transaction import (bank statement/CSV upload)
+- 📧 Email alerts for budget warnings and goal milestones
+- 📱 Improve mobile responsiveness
+
+---
+
+## 🎯 Purpose
 This project was built to:
+- Practice building multi-page, stateful applications with Streamlit
+- Work with data visualization libraries (Plotly) for real-world dashboards
+- Design and implement a polished, custom UI within Streamlit's constraints
+- Build a strong, functional portfolio project
 
-Practice frontend development
-Understand real-world application design
-Strengthen JavaScript concepts
-Build a strong portfolio project
-👤 Author
+---
 
-Ram Dwarampudi
+## 👤 Author
+**Ram Dwarampudi**
 🔗 GitHub: https://github.com/Ram-dwarampudi
-
 🔗 LinkedIn: https://www.linkedin.com/in/ram-dwarampudi-7a7a12316/
 
-⭐ Support
+---
 
+## ⭐ Support
 If you find this project useful, consider giving it a star ⭐ on GitHub!
-
-
----
-
-### 🔥 Pro Tip (Important)
-After pasting this:
-- Add **2–3 screenshots** → your project will look **10x better**
-- Then share it on LinkedIn → **great engagement guaranteed**
-
----
-
-If you want next step 🚀  
-I can help you:
-- Add **best screenshots section**
-- Write **LinkedIn post for this project**
-- Upgrade this into a **placement-level project**
